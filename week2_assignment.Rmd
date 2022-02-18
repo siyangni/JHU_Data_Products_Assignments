@@ -1,0 +1,43 @@
+---
+title: "week2_assignment"
+author: "Siyang"
+date: "2/18/2022"
+output: html_document
+---
+
+#### This is a map that shows where I got my master's degree and the location of my former department's building :)
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the Leaflet Package
+
+```{r}
+library(leaflet)
+```
+
+## Create the popup content
+
+```{r}
+content <- paste(sep = "<br/>",
+                 "<b><a href='http://www.soc.cuhk.edu.hk/'>Sociology Department</a></b>",
+                 "Room 431, 4/F, Sino Building",
+                 "CUHK, Hong Kong"
+)
+```
+
+## Create and display the map
+
+```{r}
+m <- leaflet() %>% addTiles() %>%
+  addPopups(114.20715032226775, 22.415633943282664, content,
+            options = popupOptions(closeButton = FALSE)
+  )
+
+m
+
+```
+
