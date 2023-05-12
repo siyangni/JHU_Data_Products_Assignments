@@ -1,0 +1,88 @@
+---
+title: "Developing Data Products Assignment 3"
+author: "Siyang Ni"
+date: "2023-05-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Assignment Instructions
+Create a web page presentation using R Markdown that features a plot created with Plotly. Host your webpage on either GitHub Pages, RPubs, or NeoCities. Your webpage must contain the date that you created the document, and it must contain a plot created with Plotly. We would love to see you show off your creativity! Review criteria
+
+The rubric contains the following two questions:
+
+Does the web page feature a date and is this date less than two months before the date that you’re grading this assignment?
+
+Is the web page a presentation and does it feature an interactive plot that appears to have been created with Plotly?
+
+```{r, warning=FALSE, message=FALSE}
+library(foreign)
+library(plotly)
+library(reshape2)
+library(tidyverse)
+library(tidymodels)
+library(pastecs)
+library(naniar)
+
+df <- read.dta("mcs8156/mcs6_cm_interview.dta")
+```
+
+Here we will plot prediction of tips based on total bill paied using the built-in tips dataset in R.
+
+```{r}
+# recode
+levels(df$FCCOMH00) <- c(-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8)
+
+df$FCCOMH00[df$FCCOMH00 %in% c(-3, -2, -1)] <- NA
+df$FCCOMH00 <- droplevels(df$FCCOMH00)
+
+df$FCCOMH00 <- as.numeric(df$FCCOMH00)
+
+# set x as hours polying video games during weekdays 
+# and y as educational expectation
+x <- df$FCCOMH00
+y <- df$FCSTYU00
+
+# Split the data
+set.seed(123)
+df_split <- initial_split(df)
+df_training <- df_split %>% 
+  training()
+df_test <- df_split %>% 
+  testing()
+
+# fit the training the data to an OLS model
+lm_model <- linear_reg() %>% 
+  set_engine('lm') %>% 
+  set_mode('regression') %>%
+  fit(FCSTYU00 ~ FCCOMH00, data = df_training) 
+
+# using the model to predict a randomly generated column of educational expectation
+x_range <- seq(1, 8, length.out = 8)
+x_range <- matrix(x_range, nrow=100, ncol=1)
+xdf <- data.frame(x_range)
+colnames(xdf) <- c('FCCOMH00')
+
+ydf <- lm_model %>%
+  predict(xdf) 
+
+## generate the prediction matrix
+colnames(ydf) <- c('FCSTYU00')
+xy <- data.frame(xdf, ydf) 
+
+# Plotting
+fig <- plot_ly(data = df_training, x = ~FCCOMH00, y = ~FCSTYU00, type = 'scatter', name = 'train', mode = 'markers', alpha = 0.65) %>% 
+  add_trace(data = df_test, x = ~FCCOMH00, y = ~FCSTYU00, type = 'scatter', name = 'test', mode = 'markers', alpha = 0.65 ) %>% 
+  add_trace(data = xy, x = ~FCCOMH00, y = ~FCSTYU00, name = 'prediction', mode = 'lines', alpha = 1)
+fig
+
+ 
+
+```
+
+
+
